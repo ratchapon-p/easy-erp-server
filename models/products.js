@@ -24,7 +24,7 @@ export const createProductQuery = async(data,connection) =>{
 
 export const getProductsQuery = async(connection) =>{
     try {
-        const sql = `SELECT id,attribute_1,attribute_2,attribute_3,attribute_4,custom_barcode,total FROM products WHERE deleted_at_utc IS NULL;`
+        const sql = `SELECT id AS 'key',id,attribute_1,attribute_2,attribute_3,attribute_4,custom_barcode,total FROM products WHERE deleted_at_utc IS NULL;`
 
         return await connection.query(sql, [])
     } catch (error) {
