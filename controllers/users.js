@@ -68,9 +68,9 @@ export const loginUserCtrl = asyncHandler(async(req,res) =>{
     console.log(`login_triggered`);
     const errors = validationResult(req);
 
-    const userAgent = req.connection.remoteAddress;
-    // const userAgent1 = req;
-    console.log('User-Agent:', userAgent);
+    // const userAgent = req.connection.remoteAddress;
+    // // const userAgent1 = req;
+    // console.log('User-Agent:', userAgent);
 
     if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -98,6 +98,11 @@ export const loginUserCtrl = asyncHandler(async(req,res) =>{
                 message: "Login Successfully!",
                 token: generateToken(user?.id),
                 success: true
+            })
+        }else{
+            return res.status(401).json({
+                message: "Login Fail, Incorrect password!",
+                success: false
             })
         }
 
@@ -163,7 +168,7 @@ export const updateUserCtrl = async(req,res) =>{
         return res.status(400).json({ errors: errors.array() });
     }
     const connection = await getConnection()
-    const {lastname, firstname,username,password} = req.body
+    const {lastname, firstname,username,password,role_id} = req.body
     const {id} = req.params
 
     try {
@@ -171,9 +176,16 @@ export const updateUserCtrl = async(req,res) =>{
             firstname:firstname || null,
             lastname: lastname || null,
             username: username || null,
-            password: password || null,
+            role_id: role_id || null,
             updated_at_utc: dateTimeNow,
         }
+
+        if (password) {
+            const salt = await bcrypt.genSalt(10)
+            const hashedPassword = await bcrypt.hash(password, salt)
+            data.password = hashedPassword
+        }
+
         const result = await updatedUserQuery(connection,id,data) 
 
         if (result.affectedRows === 0) {

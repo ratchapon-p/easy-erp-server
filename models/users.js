@@ -24,7 +24,7 @@ export const createUserQuery = async(data,connection) =>{
 
 export const getUsersQuery = async(connection) =>{
     try {
-        const sql = `SELECT id,username,firstname,lastname FROM users ;`
+        const sql = `SELECT u.id,username,firstname,lastname,ur.role_name AS "role" FROM users u LEFT JOIN user_roles ur ON ur.id = u.role_id ;`
 
         return await connection.query(sql, [])
     } catch (error) {
@@ -34,7 +34,7 @@ export const getUsersQuery = async(connection) =>{
 
 export const getUserQuery = async(connection,id) =>{
     try {
-        const sql = `SELECT username,firstname,lastname FROM users WHERE id = ?;`
+        const sql = `SELECT username,firstname,lastname,role_id FROM users WHERE id = ?;`
 
         return await connection.query(sql, [id])
     } catch (error) {

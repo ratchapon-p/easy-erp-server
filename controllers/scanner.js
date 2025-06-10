@@ -5,6 +5,7 @@ import { validationResult } from 'express-validator';
 
 import { InsertProductToStock, findProductByBarcode, saveProductToStock, scanProductQuery } from "../models/scanner.js"
 import {getConnection} from '../config/dbConnect2.js'
+import { getSocketIO } from '../sockets/socket.js';
 
 dayjs.extend(utc);
 
@@ -27,7 +28,6 @@ export const scanProductIn = asyncHandler(async(req,res) =>{
         }
         const barcode_product = findProduct[0]
         const total_product = barcode_product.total ? barcode_product.total : 0
-        console.log(total_product,'dtototo');
         const data = {
             id: barcode_product.id,
             total: total_product + 1
@@ -47,6 +47,15 @@ export const scanProductIn = asyncHandler(async(req,res) =>{
         await InsertProductToStock(connection, dataProductScan)
 
         await connection.commit(); 
+
+        const io = getSocketIO();
+        if(io){
+            io.emit('notification',{
+                message: `New Receive Product at ${dateTimeNow}`,
+                type: 'receive'
+            })
+        }
+ 
         res.status(200).json({
             message: 'Product Scanned',
             success: true

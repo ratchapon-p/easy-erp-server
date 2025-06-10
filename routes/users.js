@@ -23,6 +23,7 @@ const validateUpdateUser = [
     body('password').optional({checkFalsy: true, nullable :true}),
     body('firstname').optional({checkFalsy: true, nullable :true}),
     body('lastname').optional({checkFalsy: true, nullable :true}),
+    body('role_id').optional({checkFalsy: true, nullable :true}).isInt().toInt(),
 ]
 
 const validateParamId = [
