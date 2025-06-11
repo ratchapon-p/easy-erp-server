@@ -1,5 +1,5 @@
 import express from 'express'
-import { body, param } from 'express-validator'
+import { body, param, query } from 'express-validator'
 import { isLoggedIn } from '../middlewares/isLoggedIn.js'
 import { createProductCtrl, deleteProductCtrl, getProductByIdCtrl, getProductsCtrl, updateProductCtrl } from '../controllers/products.js'
 const productRoutes = express.Router()
@@ -27,7 +27,14 @@ const validateParamId = [
 ]
 
 
-productRoutes.get("/", isLoggedIn,getProductsCtrl)
+const validateGetAll = [
+    query('limit').exists(),
+    query('offSet').exists(),
+    query('filterdata').exists(),
+    query('searchText').exists(),
+]
+
+productRoutes.get("/", isLoggedIn,validateGetAll,getProductsCtrl)
 productRoutes.get("/:id",isLoggedIn,validateParamId, getProductByIdCtrl)
 productRoutes.put("/:id",isLoggedIn,validateUpdateUser, updateProductCtrl)
 productRoutes.post("/", isLoggedIn,validateCreateProduct,createProductCtrl)

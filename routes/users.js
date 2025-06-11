@@ -1,5 +1,5 @@
 import express from 'express'
-import { body, param } from 'express-validator'
+import { body, param, query } from 'express-validator'
 import { getUserByIdCtrl, getUsersCtrl, loginUserCtrl, createUserCtrl, updateUserCtrl, deleteUserCtrl } from '../controllers/users.js'
 import { isLoggedIn } from '../middlewares/isLoggedIn.js'
 const userRoutes = express.Router()
@@ -30,8 +30,14 @@ const validateParamId = [
     param('id').exists()
 ]
 
+const validateGetAll = [
+    query('limit').exists(),
+    query('offSet').exists(),
+    query('filterdata').exists(),
+    query('searchText').exists(),
+]
 
-userRoutes.get("/", isLoggedIn,getUsersCtrl)
+userRoutes.get("/", isLoggedIn,validateGetAll,getUsersCtrl)
 userRoutes.get("/:id",isLoggedIn,validateParamId, getUserByIdCtrl)
 userRoutes.put("/:id",isLoggedIn,validateUpdateUser, updateUserCtrl)
 userRoutes.post("/", validateCreateUser,createUserCtrl)

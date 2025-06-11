@@ -22,11 +22,25 @@ export const createProductQuery = async(data,connection) =>{
     }
 }
 
-export const getProductsQuery = async(connection) =>{
+export const getProductsQuery = async(connection,filter_query, filter_params) =>{
     try {
-        const sql = `SELECT id AS 'key',id,attribute_1,attribute_2,attribute_3,attribute_4,custom_barcode,total FROM products WHERE deleted_at_utc IS NULL;`
+        let parameters = []
+        let sql = `
+            SELECT
+                *
+            FROM (
+                SELECT id AS 'key',id,attribute_1,attribute_2,attribute_3,attribute_4,custom_barcode,total,deleted_at_utc FROM products 
+            ) p
+            WHERE deleted_at_utc IS NULL
+        `
 
-        return await connection.query(sql, [])
+        if (filter_query) {
+            sql += filter_query
+            parameters = filter_params
+        }
+        sql += ';'
+        
+        return await connection.query(sql, parameters)
     } catch (error) {
         console.log('getProductsQuery Error',error);
     }

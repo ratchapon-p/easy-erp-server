@@ -2,12 +2,9 @@ import asyncHandler from 'express-async-handler'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc.js';
 import { validationResult } from 'express-validator';
-import bcrypt from 'bcryptjs'
-
-import { createUserRoleQuery, deleteUserRoleQuery, findUserRoleExistsQuery, getUserRoleQuery, getUserRolesQuery, updatedUserRoleQuery } from "../models/user_roles.js"
+import { createUserRoleQuery, deleteUserRoleQuery, findUserRoleExistsQuery, getAllUserRolesQuery, getUserRoleQuery, getUserRolesQuery, updatedUserRoleQuery } from "../models/user_roles.js"
 import {getConnection} from '../config/dbConnect2.js'
-import { logger } from '../utils/logger.js';
-import { json } from 'express';
+import { searchAndFilterQuery } from '../utils/searchAndFilterQuery.js';
 
 dayjs.extend(utc);
 
@@ -58,8 +55,16 @@ export const createUserRoleCtrl = asyncHandler(async(req,res) =>{
 
 export const getUserRolesCtrl = asyncHandler(async(req,res) =>{
     const connection = await getConnection()
+    let filterData = {};
+    let searchText = {};
+    const limit = parseInt(req.query.limit) || 50;
+    const offSet = parseInt(req.query.offSet) || 0;
+    const tz = req.query.tz || '+07:00';
+    filterData = JSON.parse(req.query.filterdata);
+    searchText = JSON.parse(req.query.searchText);
+    const filter = searchAndFilterQuery({limit,offSet,tz,filterData,searchText})
     try {
-        const [roles] = await getUserRolesQuery(connection)
+        const [roles] = await getUserRolesQuery(connection,filter.query,filter.params)
         if(roles.length < 1){
             throw new Error("No Roles found!")
         }
@@ -68,6 +73,31 @@ export const getUserRolesCtrl = asyncHandler(async(req,res) =>{
             ...role,
             update_datetime: dayjs(role.update_datetime).format('DD MMMM YYYY '),
             role_access: JSON.parse(role.role_access),
+        }));
+        
+        res.status(200).json({
+            data: formattedRoles,
+            message: "Get All UserRoles Successfully!",
+            success: true
+        })
+    } catch (error) {
+        res.status(500).json({ message: error.message,success: false });
+    }finally{
+        connection.release();
+    }
+})
+
+export const getAllUserRolesCtrl = asyncHandler(async(req,res) =>{
+    const connection = await getConnection()
+    try {
+        const [roles] = await getAllUserRolesQuery(connection)
+        if(roles.length < 1){
+            throw new Error("No Roles found!")
+        }
+
+        const formattedRoles = roles.map(role => ({
+            ...role,
+            // role_access: JSON.parse(role.role_access),
         }));
         
         res.status(200).json({

@@ -22,7 +22,31 @@ export const createUserRoleQuery = async(data,connection) =>{
     }
 }
 
-export const getUserRolesQuery = async(connection) =>{
+export const getUserRolesQuery = async(connection,filter_query, filter_params) =>{
+    try {
+        let parameters = []
+        let sql = ` 
+            SELECT
+                *
+            FROM(
+                SELECT id AS 'key',id,role_name,role_access,updated_at_utc AS 'update_datetime',updated_by,deleted_at_utc FROM user_roles
+            ) u
+        WHERE deleted_at_utc IS NULL
+        `
+
+        if (filter_query) {
+            sql += filter_query
+            parameters = filter_params
+        }
+        sql += ';'
+
+        return await connection.query(sql, parameters)
+    } catch (error) {
+        console.log('getUserRolesQuery Error',error);
+    }
+}
+
+export const getAllUserRolesQuery = async(connection) =>{
     try {
         const sql = `SELECT id AS 'key',id,role_name,role_access,updated_at_utc AS 'update_datetime',updated_by FROM user_roles WHERE deleted_at_utc IS NULL;`
 

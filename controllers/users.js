@@ -4,10 +4,10 @@ import utc from 'dayjs/plugin/utc.js';
 import { validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-
 import { createUserQuery, findUserExistsQuery, getUserQuery, getUsersQuery, updatedUserQuery,deleteUserQuery } from "../models/users.js"
 import {getConnection} from '../config/dbConnect2.js'
 import { logger } from '../utils/logger.js';
+import { searchAndFilterQuery } from '../utils/searchAndFilterQuery.js';
 
 dayjs.extend(utc);
 
@@ -123,8 +123,16 @@ export const loginUserCtrl = asyncHandler(async(req,res) =>{
 
 export const getUsersCtrl = asyncHandler(async(req,res) =>{
     const connection = await getConnection()
+        let filterData = {};
+        let searchText = {};
+        const limit = parseInt(req.query.limit) || 50;
+        const offSet = parseInt(req.query.offSet) || 0;
+        const tz = req.query.tz || '+07:00';
+        filterData = JSON.parse(req.query.filterdata);
+        searchText = JSON.parse(req.query.searchText);
+        const filter = searchAndFilterQuery({limit,offSet,tz,filterData,searchText})
     try {
-        const [users] = await getUsersQuery(connection)
+        const [users] = await getUsersQuery(connection,filter.query,filter.params)
         if(users.length < 1){
             throw new Error("No users found!")
         }

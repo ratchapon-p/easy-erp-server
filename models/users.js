@@ -22,11 +22,25 @@ export const createUserQuery = async(data,connection) =>{
     }
 }
 
-export const getUsersQuery = async(connection) =>{
+export const getUsersQuery = async(connection,filter_query, filter_params) =>{
     try {
-        const sql = `SELECT u.id AS 'key',u.id AS 'id',username,firstname,lastname,ur.role_name AS "role" FROM users u LEFT JOIN user_roles ur ON ur.id = u.role_id WHERE u.deleted_at_utc IS NULL;`
+        let parameters = []
+        let sql = `
+        SELECT
+            *
+        FROM (
+            SELECT u.id AS 'key',u.id AS 'id',username,firstname,lastname,ur.role_name AS "role",u.deleted_at_utc FROM users u LEFT JOIN user_roles ur ON ur.id = u.role_id 
+        ) u
+        
+        WHERE u.deleted_at_utc IS NULL`
 
-        return await connection.query(sql, [])
+        if (filter_query) {
+            sql += filter_query
+            parameters = filter_params
+        }
+        sql += ';'
+
+        return await connection.query(sql, parameters)
     } catch (error) {
         console.log('getUsersQuery Error',error);
     }

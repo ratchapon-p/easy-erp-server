@@ -1,7 +1,7 @@
 import express from 'express'
-import { body, param } from 'express-validator'
+import { body, param, query } from 'express-validator'
 import { isLoggedIn } from '../middlewares/isLoggedIn.js'
-import {  getUserRolesCtrl,getUserRoleByIdCtrl, createUserRoleCtrl, updateUserRoleCtrl, deleteUserRoleCtrl } from '../controllers/user_roles.js'
+import {  getUserRolesCtrl,getUserRoleByIdCtrl, createUserRoleCtrl,getAllUserRolesCtrl, updateUserRoleCtrl, deleteUserRoleCtrl } from '../controllers/user_roles.js'
 const userRoleRoutes = express.Router()
 
 const validateCreateProduct = [
@@ -20,8 +20,15 @@ const validateParamId = [
     param('id').exists().isInt().toInt()
 ]
 
+const validateGetAll = [
+    query('limit').exists(),
+    query('offSet').exists(),
+    query('filterdata').exists(),
+    query('searchText').exists(),
+]
 
-userRoleRoutes.get("/", isLoggedIn,getUserRolesCtrl)
+userRoleRoutes.get("/", isLoggedIn,validateGetAll,getUserRolesCtrl)
+userRoleRoutes.get("/all", isLoggedIn,getAllUserRolesCtrl)
 userRoleRoutes.get("/:id",isLoggedIn,validateParamId, getUserRoleByIdCtrl)
 userRoleRoutes.post("/", isLoggedIn,validateCreateProduct,createUserRoleCtrl)
 userRoleRoutes.put("/:id",isLoggedIn,validateUpdateUser, updateUserRoleCtrl)

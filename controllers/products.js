@@ -2,11 +2,9 @@ import asyncHandler from 'express-async-handler'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc.js';
 import { validationResult } from 'express-validator';
-import bcrypt from 'bcryptjs'
-
 import { createProductQuery, deleteProductQuery, findProductExistsQuery, getProductQuery, getProductsQuery, updatedProductQuery } from "../models/products.js"
 import {getConnection} from '../config/dbConnect2.js'
-import { logger } from '../utils/logger.js';
+import { searchAndFilterQuery } from '../utils/searchAndFilterQuery.js';
 
 dayjs.extend(utc);
 
@@ -60,12 +58,26 @@ export const createProductCtrl = asyncHandler(async(req,res) =>{
 
 export const getProductsCtrl = asyncHandler(async(req,res) =>{
     const connection = await getConnection()
+    let filterData = {};
+    let searchText = {};
+    const limit = parseInt(req.query.limit) || 50;
+    const offSet = parseInt(req.query.offSet) || 0;
+    const tz = req.query.tz || '+07:00';
+    filterData = JSON.parse(req.query.filterdata);
+    searchText = JSON.parse(req.query.searchText);
+    const filter = searchAndFilterQuery({limit,offSet,tz,filterData,searchText})
+    
     try {
-        const [products] = await getProductsQuery(connection)
+        const [products] = await getProductsQuery(connection,filter.query,filter.params)
+        
         if(products.length < 1){
-            throw new Error("No products found!")
+            return res.status(404).json({
+                data: [],
+                message: "No products found!",
+                success: false
+            })
         }
-        res.status(200).json({
+        return res.status(200).json({
             data: products,
             message: "Get All Products Successfully!",
             success: true
