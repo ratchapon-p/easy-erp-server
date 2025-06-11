@@ -1,15 +1,15 @@
 import express from 'express'
 import { body, param } from 'express-validator'
-import { getUserByIdCtrl, getUsersCtrl, loginUserCtrl, registerUserCtrl, updateUserCtrl } from '../controllers/users.js'
+import { getUserByIdCtrl, getUsersCtrl, loginUserCtrl, createUserCtrl, updateUserCtrl, deleteUserCtrl } from '../controllers/users.js'
 import { isLoggedIn } from '../middlewares/isLoggedIn.js'
 const userRoutes = express.Router()
 
-const validateRegistration = [
+const validateCreateUser = [
     body('username').exists(),
     body('firstname').exists(),
     body('lastname').exists(),
     body('password').exists(),
-    body('role').isInt().toInt()
+    body('role_id').isInt().toInt()
 ]
 
 const validateLogin = [
@@ -34,7 +34,8 @@ const validateParamId = [
 userRoutes.get("/", isLoggedIn,getUsersCtrl)
 userRoutes.get("/:id",isLoggedIn,validateParamId, getUserByIdCtrl)
 userRoutes.put("/:id",isLoggedIn,validateUpdateUser, updateUserCtrl)
-userRoutes.post("/register", validateRegistration,registerUserCtrl)
+userRoutes.post("/", validateCreateUser,createUserCtrl)
 userRoutes.post("/login", validateLogin,loginUserCtrl)
+userRoutes.delete("/:id", validateParamId,deleteUserCtrl)
 
 export default userRoutes

@@ -19,10 +19,10 @@ const io = new Server(server, {
 setSocketIO(io)
 
 io.on('connection', (socket) =>{
-    console.log(client_url,'connected!');
+    // console.log(client_url,'connected!');
 
     socket.on('disconnect',() =>{
-        console.log(client_url,'disconnected!');
+        // console.log(client_url,'disconnected!');
     })
 })
 

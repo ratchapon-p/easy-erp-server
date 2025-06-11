@@ -5,7 +5,7 @@ import { validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
-import { createUserQuery, findUserExistsQuery, getUserQuery, getUsersQuery, updatedUserQuery } from "../models/users.js"
+import { createUserQuery, findUserExistsQuery, getUserQuery, getUsersQuery, updatedUserQuery,deleteUserQuery } from "../models/users.js"
 import {getConnection} from '../config/dbConnect2.js'
 import { logger } from '../utils/logger.js';
 
@@ -15,7 +15,7 @@ const generateToken = (id) =>{
     return jwt.sign({id}, process.env.JWT_KEY, {expiresIn: '1d'})
 }
 
-export const registerUserCtrl = asyncHandler(async(req,res) =>{
+export const createUserCtrl = asyncHandler(async(req,res) =>{
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -23,7 +23,7 @@ export const registerUserCtrl = asyncHandler(async(req,res) =>{
 
     const dateTimeNow = dayjs.utc().format('YYYY-MM-DD HH:mm:ss')
     const connection = await getConnection()
-    const { username,firstname,lastname,role,password } = req.body
+    const { username,firstname,lastname,role_id,password } = req.body
     try {
         
         const [findUser] = await findUserExistsQuery(username,connection)
@@ -39,7 +39,7 @@ export const registerUserCtrl = asyncHandler(async(req,res) =>{
             password: hashedPassword,
             firstname,
             lastname,
-            role_id: role,
+            role_id: role_id,
             created_at_utc: dateTimeNow,
             updated_at_utc: dateTimeNow,
         }
@@ -213,3 +213,35 @@ export const updateUserCtrl = async(req,res) =>{
     }
 
 }
+
+
+export const deleteUserCtrl = asyncHandler(async(req,res) =>{
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+    }
+    const connection = await getConnection()
+    const {id} = req.params
+    const dateTimeNow = dayjs.utc().format('YYYY-MM-DD HH:mm:ss')
+    const data = {
+        deleted_at_utc: dateTimeNow
+    }
+    try {
+
+        const [user] = await getUserQuery(connection,id)
+        if(!user.length){
+            throw new Error("No products found!")
+        }
+        const [product] = await deleteUserQuery(connection,id,data)
+        res.status(200).json({
+            message: "Delete Product Successfully!",
+            success: true
+        })
+        
+    } catch (error) {
+        res.status(500).json({ message: error.message,success: false });
+    }finally{
+        connection.release();
+    }
+
+})
