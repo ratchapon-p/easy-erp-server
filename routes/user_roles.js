@@ -1,25 +1,19 @@
 import express from 'express'
 import { body, param } from 'express-validator'
 import { isLoggedIn } from '../middlewares/isLoggedIn.js'
-import {  getUserRolesCtrl } from '../controllers/user_roles.js'
+import {  getUserRolesCtrl,getUserRoleByIdCtrl, createUserRoleCtrl, updateUserRoleCtrl, deleteUserRoleCtrl } from '../controllers/user_roles.js'
 const userRoleRoutes = express.Router()
 
 const validateCreateProduct = [
-    body('attribute_1').exists(),
-    body('attribute_2').exists(),
-    body('attribute_3').exists(),
-    body('attribute_4').exists(),
-    body('custom_barcode').exists(),
+    body('role_name').exists(),
+    body('role_access').exists(),
 ]
 
 
 const validateUpdateUser = [
     param('id').isInt().toInt(),
-    body('attribute_1').optional({checkFalsy: true, nullable :true}),
-    body('attribute_2').optional({checkFalsy: true, nullable :true}),
-    body('attribute_3').optional({checkFalsy: true, nullable :true}),
-    body('attribute_4').optional({checkFalsy: true, nullable :true}),
-    body('custom_barcode').optional({checkFalsy: true, nullable :true}),
+    body('role_name').optional({checkFalsy: true, nullable :true}),
+    body('role_access').optional({checkFalsy: true, nullable :true}).isObject(),
 ]
 
 const validateParamId = [
@@ -28,9 +22,9 @@ const validateParamId = [
 
 
 userRoleRoutes.get("/", isLoggedIn,getUserRolesCtrl)
-// userRoleRoutes.get("/:id",isLoggedIn,validateParamId, getProductByIdCtrl)
-// userRoleRoutes.put("/:id",isLoggedIn,validateUpdateUser, updateProductCtrl)
-// userRoleRoutes.post("/", isLoggedIn,validateCreateProduct,createProductCtrl)
-// userRoleRoutes.delete("/:id", isLoggedIn,validateParamId,deleteProductCtrl)
+userRoleRoutes.get("/:id",isLoggedIn,validateParamId, getUserRoleByIdCtrl)
+userRoleRoutes.post("/", isLoggedIn,validateCreateProduct,createUserRoleCtrl)
+userRoleRoutes.put("/:id",isLoggedIn,validateUpdateUser, updateUserRoleCtrl)
+userRoleRoutes.delete("/:id", isLoggedIn,validateParamId,deleteUserRoleCtrl)
 
 export default userRoleRoutes

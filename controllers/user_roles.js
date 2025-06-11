@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs'
 import { createUserRoleQuery, deleteUserRoleQuery, findUserRoleExistsQuery, getUserRoleQuery, getUserRolesQuery, updatedUserRoleQuery } from "../models/user_roles.js"
 import {getConnection} from '../config/dbConnect2.js'
 import { logger } from '../utils/logger.js';
+import { json } from 'express';
 
 dayjs.extend(utc);
 
@@ -19,21 +20,18 @@ export const createUserRoleCtrl = asyncHandler(async(req,res) =>{
     const dateTimeNow = dayjs.utc().format('YYYY-MM-DD HH:mm:ss')
     const connection = await getConnection()
     const userId = req.userAuthId
-    const { attribute_1,attribute_2,attribute_3,attribute_4,custom_barcode } = req.body
+    const { role_name,role_access } = req.body
     try {
         
         
-        const [findUserRole] = await findUserRoleExistsQuery(attribute_1,attribute_2,attribute_3,attribute_4,custom_barcode,connection)
+        const [findUserRole] = await findUserRoleExistsQuery(role_name,connection)
         if(findUserRole.length > 0){
             throw new Error("Role Exists!")
         }
-
+        const paresRoleAccess = JSON.stringify(role_access)
         const data = {
-            attribute_1,
-            attribute_2,
-            attribute_3,
-            attribute_4,
-            custom_barcode,
+            role_name,
+            role_access: paresRoleAccess,
             updated_by: userId,
             created_at_utc: dateTimeNow,
             updated_at_utc: dateTimeNow,
@@ -61,12 +59,19 @@ export const createUserRoleCtrl = asyncHandler(async(req,res) =>{
 export const getUserRolesCtrl = asyncHandler(async(req,res) =>{
     const connection = await getConnection()
     try {
-        const [products] = await getUserRolesQuery(connection)
-        if(products.length < 1){
+        const [roles] = await getUserRolesQuery(connection)
+        if(roles.length < 1){
             throw new Error("No Roles found!")
         }
+
+        const formattedRoles = roles.map(role => ({
+            ...role,
+            update_datetime: dayjs(role.update_datetime).format('DD MMMM YYYY '),
+            role_access: JSON.parse(role.role_access),
+        }));
+        
         res.status(200).json({
-            data: products,
+            data: formattedRoles,
             message: "Get All UserRoles Successfully!",
             success: true
         })
@@ -85,14 +90,17 @@ export const getUserRoleByIdCtrl = asyncHandler(async(req,res) =>{
     const connection = await getConnection()
     const {id} = req.params
     try {
-        const [product] = await getUserRoleQuery(connection,id)
+        const [role] = await getUserRoleQuery(connection,id)
+        role[0].role_access = JSON.parse(role[0].role_access);
+
         res.status(200).json({
-            data: product,
+            data: role,
             message: "Get Role Successfully!",
             success: true
         })
         
     } catch (error) {
+        console.log("Error",error);
         res.status(500).json({ message: error.message,success: false });
     }finally{
         connection.release();
@@ -108,17 +116,18 @@ export const deleteUserRoleCtrl = asyncHandler(async(req,res) =>{
     const connection = await getConnection()
     const {id} = req.params
     const dateTimeNow = dayjs.utc().format('YYYY-MM-DD HH:mm:ss')
+    const userId = req.userAuthId
     const data = {
-        deleted_at_utc: dateTimeNow
+        deleted_at_utc: dateTimeNow,
+        updated_by: userId
     }
     try {
 
-        const [productFound] = await getUserRoleQuery(connection,id)
-        console.log(productFound,'<<productFound');
-        if(!productFound.length){
-            throw new Error("No products found!")
+        const [userRoleFound] = await getUserRoleQuery(connection,id)
+        if(!userRoleFound.length){
+            throw new Error("No userRoles found!")
         }
-        const [product] = await deleteUserRoleQuery(connection,id,data)
+        const [userRole] = await deleteUserRoleQuery(connection,id,data)
         res.status(200).json({
             message: "Delete Role Successfully!",
             success: true
@@ -138,21 +147,19 @@ export const updateUserRoleCtrl = async(req,res) =>{
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
+    const userId = req.userAuthId
     const connection = await getConnection()
-    const {attribute_1, attribute_2,attribute_3,attribute_4,custom_barcode} = req.body
+    const {role_name,role_access} = req.body
     const {id} = req.params
-
+    const paresRoleAccess = JSON.stringify(role_access)
     try {
         const data = {
-            attribute_1:attribute_1 || null,
-            attribute_2: attribute_2 || null,
-            attribute_3: attribute_3 || null,
-            attribute_4: attribute_4 || null,
-            custom_barcode: custom_barcode || null,
+            role_name,
+            role_access: paresRoleAccess,
+            updated_by: userId,
             updated_at_utc: dateTimeNow,
         }
         const result = await updatedUserRoleQuery(connection,id,data) 
-        console.log(result,'<<result');
         if (result.affectedRows === 0) {
             return res.status(404).json({
                 status: 'error',

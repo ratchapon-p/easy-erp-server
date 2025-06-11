@@ -97,6 +97,8 @@ export const loginUserCtrl = asyncHandler(async(req,res) =>{
             return res.status(200).json({
                 message: "Login Successfully!",
                 token: generateToken(user?.id),
+                user_id: user?.id,
+                role_id: user?.role_id,
                 success: true
             })
         }else{

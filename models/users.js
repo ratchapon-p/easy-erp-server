@@ -3,7 +3,7 @@
 export const findUserExistsQuery = async(username,connection) => {
 
     try {
-        const sql = `SELECT id,username,password FROM users WHERE username = ? LIMIT 1;`
+        const sql = `SELECT id,username,password,role_id FROM users WHERE username = ? LIMIT 1;`
         return await connection.query(sql, [username])
     } catch (error) {
         console.log('findUserExistsQuery Error',error);

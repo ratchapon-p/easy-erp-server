@@ -1,10 +1,10 @@
 
 
-export const findUserRoleExistsQuery = async(attribute_1,attribute_2,attribute_3,attribute_4,custom_barcode,connection) => {
+export const findUserRoleExistsQuery = async(role_name,connection) => {
 
     try {
-        const sql = `SELECT id FROM user_roles WHERE attribute_1 = ? AND attribute_2 = ? AND attribute_3 = ? AND attribute_4 = ? AND custom_barcode = ? AND deleted_at_utc IS NULL LIMIT 1;`
-        return await connection.query(sql, [attribute_1,attribute_2,attribute_3,attribute_4,custom_barcode])
+        const sql = `SELECT id FROM user_roles WHERE role_name = ? AND deleted_at_utc IS NULL LIMIT 1;`
+        return await connection.query(sql, [role_name])
     } catch (error) {
         console.log('findUserRoleExistsQuery Error',error);
     }
@@ -24,7 +24,7 @@ export const createUserRoleQuery = async(data,connection) =>{
 
 export const getUserRolesQuery = async(connection) =>{
     try {
-        const sql = `SELECT id AS 'key',id,role_name,updated_at_utc,updated_by FROM user_roles WHERE deleted_at_utc IS NULL;`
+        const sql = `SELECT id AS 'key',id,role_name,role_access,updated_at_utc AS 'update_datetime',updated_by FROM user_roles WHERE deleted_at_utc IS NULL;`
 
         return await connection.query(sql, [])
     } catch (error) {
@@ -34,7 +34,7 @@ export const getUserRolesQuery = async(connection) =>{
 
 export const getUserRoleQuery = async(connection,id) =>{
     try {
-        const sql = `SELECT id,attribute_1,attribute_2,attribute_3,attribute_4,custom_barcode FROM user_roles WHERE id = ? AND deleted_at_utc IS NULL;`
+        const sql = `SELECT id,role_name,role_access,updated_at_utc FROM user_roles WHERE id = ? AND deleted_at_utc IS NULL;`
 
         return await connection.query(sql, [id])
     } catch (error) {
