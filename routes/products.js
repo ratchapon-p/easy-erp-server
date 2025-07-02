@@ -1,7 +1,7 @@
 import express from 'express'
 import { body, param, query } from 'express-validator'
 import { isLoggedIn } from '../middlewares/isLoggedIn.js'
-import { createProductCtrl, deleteProductCtrl, getProductByIdCtrl, getProductsCtrl, updateProductCtrl } from '../controllers/products.js'
+import { createProductCtrl, deleteProductCtrl, getProductByIdCtrl, getProductsCtrl, getStockBalanceDashboard, updateProductCtrl } from '../controllers/products.js'
 const productRoutes = express.Router()
 
 const validateCreateProduct = [
@@ -26,6 +26,11 @@ const validateParamId = [
     param('id').exists().isInt().toInt()
 ]
 
+const validateDashboard = [
+    // param('type').exists().isIn(['daily','monthly','yearly']),
+    body('year').isInt().toInt(),
+]
+
 
 const validateGetAll = [
     query('limit').exists(),
@@ -39,5 +44,6 @@ productRoutes.get("/:id",isLoggedIn,validateParamId, getProductByIdCtrl)
 productRoutes.put("/:id",isLoggedIn,validateUpdateUser, updateProductCtrl)
 productRoutes.post("/", isLoggedIn,validateCreateProduct,createProductCtrl)
 productRoutes.delete("/:id", isLoggedIn,validateParamId,deleteProductCtrl)
+productRoutes.post("/dashboard", isLoggedIn,validateDashboard,getStockBalanceDashboard)
 
 export default productRoutes

@@ -16,10 +16,7 @@ const app = express();
 app.use(express.json())
 app.use(cors())
 
-    
-
 app.use('/api/v1/check',isLoggedIn)
-
 app.use('/api/v1/user',userRoutes)
 app.use('/api/v1/product',productRoutes)
 app.use('/api/v1/scanner',scannerRoutes)

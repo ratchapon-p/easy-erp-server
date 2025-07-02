@@ -2,7 +2,7 @@ import asyncHandler from 'express-async-handler'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc.js';
 import { validationResult } from 'express-validator';
-import { createProductQuery, deleteProductQuery, findProductExistsQuery, getProductQuery, getProductsQuery, updatedProductQuery } from "../models/products.js"
+import { createProductQuery, deleteProductQuery, findProductExistsQuery, getProductQuery, getProductsQuery, getStockBalanceDashboardQuery, updatedProductQuery } from "../models/products.js"
 import {getConnection} from '../config/dbConnect2.js'
 import { searchAndFilterQuery } from '../utils/searchAndFilterQuery.js';
 
@@ -177,6 +177,47 @@ export const updateProductCtrl = async(req,res) =>{
                 status:'success',
                 message:'Update Product Successfully',
                 success: true
+            })
+
+        }
+
+        await connection.commit(); 
+    } catch (error) {
+        console.log('Error updateProductCtrl:',error);
+        await connection.rollback(); 
+        res.status(500).json({ message: error.message,success: false });
+    }finally{
+        connection.release();
+    }
+
+}
+
+export const getStockBalanceDashboard = async(req,res) =>{
+    const nowYear = dayjs.utc().format('YYYY')
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    const connection = await getConnection()
+    const {year} = req.body
+
+    const yearQuery = year || nowYear
+
+    try {
+        const [result] = await getStockBalanceDashboardQuery(connection,yearQuery) 
+        console.log(result,'<<result');
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Product not found or no changes made',
+                success: false
+            });
+        }
+        else{
+            res.status(200).json({
+                status:'success',
+                success: true,
+                data: result
             })
 
         }
